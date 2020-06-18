@@ -1,0 +1,77 @@
+{
+  "project_info": {
+    "project_number": "226047057",
+    "firebase_url": "https://spaceapp-darkside.firebaseio.com",
+    "project_id": "spaceapp-darkside",
+    "storage_bucket": "spaceapp-darkside.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:226047057:android:f6dc03eb42f8792ca8b470",
+        "android_client_info": {
+          "package_name": "com.example.spaceapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "226047057-n1jrpq64svsinegh7cupabr3v02tm3l7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.spaceapp",
+            "certificate_hash": "5acdf6ef8ed5734c7cc47e232171ad3c6a02b676"
+          }
+        },
+        {
+          "client_id": "226047057-rqrat8dcv0e7mtlkl7g2n31j38il7hbu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4YzDvjhErq1IqOZ7_XO3hcbIuCaYgUTE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "226047057-rqrat8dcv0e7mtlkl7g2n31j38il7hbu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:226047057:android:b6393ce7a1a464cda8b470",
+        "android_client_info": {
+          "package_name": "com.spaceapp.space"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "226047057-rqrat8dcv0e7mtlkl7g2n31j38il7hbu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4YzDvjhErq1IqOZ7_XO3hcbIuCaYgUTE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "226047057-rqrat8dcv0e7mtlkl7g2n31j38il7hbu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

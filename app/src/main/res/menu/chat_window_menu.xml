@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <item
+        android:id = "@+id/chatwindwo_delete"
+        android:title = "Delete Contact"
+        />
+
+    <item
+        android:id="@+id/chatwindow_block"
+        android:title="Block Contact"
+        />
+
+</menu>
