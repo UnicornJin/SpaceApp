@@ -23,7 +23,7 @@ import com.spaceapp.space.account.AddContact;
 
 import java.util.List;
 
-public class PostAdapter extends RecyclerView.Adapter<PostAdapter.ViewHolder>{
+public class PostPlazaAdapter extends RecyclerView.Adapter<PostPlazaAdapter.ViewHolder>{
     private List<Post> mPostList;
 
     static class ViewHolder extends RecyclerView.ViewHolder {
@@ -38,21 +38,21 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.ViewHolder>{
         public ViewHolder(View view) {
             super(view);
             this.view = view;
-            this.postImage = (ImageView) view.findViewById(R.id.post_image);
-            this.postTitle = (TextView) view.findViewById(R.id.post_title);
-            this.postContent = (TextView) view.findViewById(R.id.post_content);
-            this.postTime = (TextView) view.findViewById(R.id.post_time);
-            this.chat = (Button) view.findViewById(R.id.post_chat);
+            this.postImage = (ImageView) view.findViewById(R.id.plaza_post_image);
+            this.postTitle = (TextView) view.findViewById(R.id.plaza_post_title);
+            this.postContent = (TextView) view.findViewById(R.id.plaza_post_content);
+            this.postTime = (TextView) view.findViewById(R.id.plaza_post_time);
+            this.chat = (Button) view.findViewById(R.id.plaza_post_chat);
         }
     }
 
-    public PostAdapter(List<Post> postList) {
+    public PostPlazaAdapter(List<Post> postList) {
         this.mPostList = postList;
     }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_post, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_plaza_post, parent, false);
         ViewHolder holder = new ViewHolder(view);
         return  holder;
     }

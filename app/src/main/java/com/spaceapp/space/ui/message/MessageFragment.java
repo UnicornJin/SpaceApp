@@ -11,7 +11,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
@@ -19,7 +18,11 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentChange;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.spaceapp.space.MainActivity;
@@ -30,7 +33,11 @@ import com.spaceapp.space.ui.chatwindow.ChatWindow;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 public class MessageFragment extends Fragment {
 
@@ -78,44 +85,59 @@ public class MessageFragment extends Fragment {
         final FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("USERDATA").document(MainActivity.currentUser.getUid())
                 .collection("CONTACTS")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
                     @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot doc : task.getResult()) {
-                                String name = doc.getString("ContactName");
-                                String uid = doc.getString("Uid");
+                    public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                        if (e != null) {
+                            Log.w(">>>>", "Contact List Listen Failed: " + e.toString());
+                        }
 
-                                final Contact newContact = new Contact();
-                                newContact.setName(name);
-                                newContact.setUid(uid);
+                        for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                            String name = doc.getString("ContactName");
+                            String uid = doc.getString("Uid");
 
-                                db.collection("USERDATA").document(MainActivity.currentUser.getUid())
-                                        .collection("CONTACTS")
-                                        .document(newContact.getUid())
-                                        .collection("MSGLIST")
-                                        .orderBy("time")
-                                        .limit(1)
-                                        .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                                        if (task.isSuccessful()) {
-                                            for (QueryDocumentSnapshot doc : task.getResult()) {
+                            final Contact newContact = new Contact();
+                            newContact.setName(name);
+                            newContact.setUid(uid);
 
-                                                Log.i(">>>>>", "Last MSg:" + doc.getString("content"));
-
-                                                newContact.setLastMsg(doc.get("content").toString());
+                            db.collection("USERDATA").document(MainActivity.currentUser.getUid())
+                                    .collection("CONTACTS")
+                                    .document(newContact.getUid())
+                                    .collection("MSGLIST")
+                                    .orderBy("time", Query.Direction.ASCENDING)
+                                    .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                                        @Override
+                                        public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                                            if (e != null) {
+                                                Log.w(">>>>>", "Last message listen failed: " + e);
                                             }
-                                            contactList.add(newContact);
+
+                                            for (DocumentChange dc : queryDocumentSnapshots.getDocumentChanges()) {
+
+                                                Log.i(">>>>>>", "Last Message Added: " + dc.getDocument().getString("content"));
+
+                                                newContact.setLastMsg(dc.getDocument().getString("content"));
+                                                newContact.setLastMsgTime(dc.getDocument().getTimestamp("time").getSeconds());
+                                            }
+
+                                            if (contactList.contains(newContact)) {
+                                                contactList.remove(newContact);
+                                                contactList.add(newContact);
+                                            } else {
+                                                contactList.add(newContact);
+                                            }
+
+                                            Collections.sort(contactList, new Comparator<Contact>() {
+                                                @Override
+                                                public int compare(Contact o1, Contact o2) {
+                                                    return (-1) * o1.getLastMsgTime().compareTo(o2.getLastMsgTime());
+                                                }
+                                            });
                                             adapter.notifyDataSetChanged();
                                         }
-                                    }
-                                });
-                            }
-                        } else {
-                            Log.e(">>>>>>", "Cannot load contact Lst");
+                                    });
                         }
+
                     }
                 });
     }

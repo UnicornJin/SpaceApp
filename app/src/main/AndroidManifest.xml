@@ -9,7 +9,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Design">
-        <activity android:name=".SplashActivity"
+        <activity android:name=".post.ModifyPost"></activity>
+        <activity
+            android:name=".SplashActivity"
             android:label="@string/app_name"
             android:theme="@style/Theme.AppCompat.NoActionBar">
             <intent-filter>
@@ -23,11 +25,12 @@
         <activity android:name=".account.SignUp" />
         <activity android:name=".account.LogOut" />
         <activity android:name=".account.LogIn" />
-        <activity android:name=".ui.chatwindow.ChatWindow" />
+        <activity
+            android:name=".ui.chatwindow.ChatWindow"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
         <activity
             android:name=".MainActivity"
-            android:label="@string/app_name">
-        </activity>
+            android:label="@string/app_name"></activity>
 
         <provider
             android:name="androidx.core.content.FileProvider"

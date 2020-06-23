@@ -11,17 +11,18 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
@@ -32,7 +33,7 @@ import com.spaceapp.space.account.LogIn;
 import com.spaceapp.space.account.LogOut;
 import com.spaceapp.space.post.NewPost;
 import com.spaceapp.space.post.Post;
-import com.spaceapp.space.post.PostAdapter;
+import com.spaceapp.space.post.PostMineAdapter;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -40,14 +41,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 public class MineFragment extends Fragment {
 
     List<Post> myPostList = new ArrayList<>();
 
-    private RecyclerView meRecyclerView;
-    private PostAdapter adapter;
-
-    private View thisView;
+    public static View thisView;
 
     TextView userInfo;
 
@@ -110,6 +110,14 @@ public class MineFragment extends Fragment {
                 }
             });
 
+            ((SwipeRefreshLayout) root.findViewById(R.id.mine_swipe)).setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    onResume();
+                    ((SwipeRefreshLayout) root.findViewById(R.id.mine_swipe)).setRefreshing(false);
+                }
+            });
+
             return root;
         }
 
@@ -125,19 +133,20 @@ public class MineFragment extends Fragment {
             RecyclerView recyclerView = (RecyclerView) thisView.findViewById(R.id.mine_myposts);
             LinearLayoutManager manager = new LinearLayoutManager(thisView.getContext());
             recyclerView.setLayoutManager(manager);
-            final PostAdapter adapter = new PostAdapter(myPostList);
+            final PostMineAdapter adapter = new PostMineAdapter(myPostList);
             recyclerView.setAdapter(adapter);
 
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             db.collection("USERDATA")
                     .document(MainActivity.currentUser.getUid())
                     .collection("POSTS")
-                    .get()
-                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    .addSnapshotListener(new EventListener<QuerySnapshot>() {
                         @Override
-                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                            if (task.isSuccessful()) {
-                                for (final DocumentSnapshot doc : task.getResult()) {
+                        public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                            if (e != null) {
+                                Log.w(">>>>>", "Load my posts error:" + e);
+                            } else {
+                                for (final QueryDocumentSnapshot doc : queryDocumentSnapshots) {
                                     if (doc.getBoolean("withImage")) {
                                         FirebaseStorage storage = FirebaseStorage.getInstance();
                                         StorageReference imageRef = storage.getReference()
@@ -171,8 +180,8 @@ public class MineFragment extends Fragment {
                                                     }
                                                 }
                                             });
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
+                                        } catch (Exception exception) {
+                                            exception.printStackTrace();
                                         }
                                     } else {
                                         Post tempWithoutImage = new Post(
@@ -192,8 +201,6 @@ public class MineFragment extends Fragment {
                                         adapter.notifyDataSetChanged();
                                     }
                                 }
-                            } else {
-                                Log.e(">>>>>>>", "Cannot get my Posts");
                             }
                         }
                     });

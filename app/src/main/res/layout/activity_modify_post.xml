@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".post.ModifyPost">
+
+    <TextView
+        android:id="@+id/mod_post_page"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Modify this post"
+        android:textSize="30dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/mod_post_chosen_image"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/mod_post" />
+
+    <EditText
+        android:id="@+id/mod_post_title"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:hint="Title"
+        android:maxLines="1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/mod_post_page"
+        />
+
+    <EditText
+        android:id="@+id/mod_post_content"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:hint="Post Content"
+        android:maxLines="6"
+        android:gravity="top"
+        android:inputType="textMultiLine"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/mod_post_title" />
+
+    <Button
+        android:id="@+id/mod_post_photo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Choose A photo"
+        android:textAllCaps="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/mod_post_content" />
+
+    <Button
+        android:id="@+id/mod_post"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Modify"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/mod_cancel"
+        app:layout_constraintTop_toBottomOf="@+id/mod_post_photo" />
+
+    <Button
+        android:id="@+id/mod_cancel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="cancel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/mod_post"
+        app:layout_constraintTop_toBottomOf="@+id/mod_post_photo" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

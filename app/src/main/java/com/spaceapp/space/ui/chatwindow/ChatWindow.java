@@ -17,7 +17,10 @@ import android.widget.TextView;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.DocumentChange;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.spaceapp.space.MainActivity;
@@ -28,6 +31,8 @@ import com.spaceapp.space.message.MessageAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 public class ChatWindow extends AppCompatActivity {
     private Toolbar chatWindowToolbar;
@@ -73,24 +78,26 @@ public class ChatWindow extends AppCompatActivity {
                 .collection("CONTACTS")
                 .document(contact.getUid())
                 .collection("MSGLIST")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
                     @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot doc : task.getResult()) {
-                                Timestamp msgtime = doc.getTimestamp("time");
-                                String msgContent = doc.getString("content");
-                                boolean isSent = doc.getBoolean("sent");
+                    public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                        if (e != null) {
+                            Log.w(">>>>>", "Listen failed: " + e.toString());
+                        }
 
-                                Message temp = new Message(msgtime, msgContent, isSent);
-                                msgItemList.add(temp);
-                                adapter.notifyItemInserted(msgItemList.size() - 1);
-                                msgRecyclerView.scrollToPosition(msgItemList.size() - 1);
+                        for (DocumentChange dc : queryDocumentSnapshots.getDocumentChanges()) {
+                            switch (dc.getType()) {
+                                case ADDED:
+                                    Message temp = new Message(
+                                            dc.getDocument().getTimestamp("time"),
+                                            dc.getDocument().getString("content"),
+                                            dc.getDocument().getBoolean("sent")
+                                    );
+                                    msgItemList.add(temp);
+                                    adapter.notifyDataSetChanged();
+                                    msgRecyclerView.scrollToPosition(msgItemList.size() - 1);
+                                    break;
                             }
-
-                        } else {
-                            Log.e(">>>>>>", "Read Msg lst error");
                         }
                     }
                 });
@@ -102,16 +109,9 @@ public class ChatWindow extends AppCompatActivity {
             public void onClick(View v) {
                 String sendingContent = inputText.getText().toString();
                 if (!"".equals(sendingContent)) {
-
                     Message message = new Message(Timestamp.now(), sendingContent, true);
-                    msgItemList.add(message);
-
                     sendMsg(message, contact);
-
-                    adapter.notifyItemInserted(msgItemList.size() - 1);
-                    msgRecyclerView.scrollToPosition(msgItemList.size() - 1);
                     inputText.setText("");
-
                 }
             }
         });
