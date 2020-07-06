@@ -9,6 +9,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -44,6 +46,8 @@ public class ChatWindow extends AppCompatActivity {
     private RecyclerView msgRecyclerView;
     private MessageAdapter adapter;
 
+    private Contact contact;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,7 +63,7 @@ public class ChatWindow extends AppCompatActivity {
         msgRecyclerView.setAdapter(adapter);
 
         Intent intent = getIntent();
-        final Contact contact = (Contact) intent.getSerializableExtra("contact");
+        contact = (Contact) intent.getSerializableExtra("contact");
         Log.i(">>>>>>>>", "chatting contact: " + contact.getUid());
 
         chatWindowToolbar = (Toolbar) findViewById(R.id.chat_window_toolbar);
@@ -69,6 +73,25 @@ public class ChatWindow extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 onBackPressed();
+            }
+        });
+        chatWindowToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.chatwindow_delete:
+                        contact.delete(getWindow().getDecorView());
+                        break;
+                    case R.id.chatwindow_block:
+                        contact.block(getWindow().getDecorView());
+                        break;
+                    case R.id.chatwindow_rename:
+                        contact.rename(getWindow().getDecorView());
+                        break;
+                    default:
+                        break;
+                }
+                return true;
             }
         });
 
@@ -144,5 +167,6 @@ public class ChatWindow extends AppCompatActivity {
                 .document(msg.getTime().toString())
                 .set(msgToHim);
     }
+
 
 }

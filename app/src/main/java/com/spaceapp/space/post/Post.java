@@ -1,5 +1,7 @@
 package com.spaceapp.space.post;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.view.View;
@@ -73,6 +75,27 @@ public class Post {
     }
 
     public void delete(final View view) {
+        AlertDialog.Builder dialog = new AlertDialog.Builder(view.getContext());
+        dialog.setTitle("Delete Post");
+        dialog.setMessage("Are you sure about deleting this post?");
+        dialog.setCancelable(false);
+        dialog.setPositiveButton("Yes, Delete.", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                deleteHelper(view);
+            }
+        });
+        dialog.setNegativeButton("No, don't!", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+        dialog.show();
+
+    }
+
+    private void deleteHelper(final View view) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("USERDATA")
                 .document(MainActivity.currentUser.getUid())
@@ -83,19 +106,27 @@ public class Post {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
-                            Toast.makeText(view.getContext(), "Post Deleted Successfully!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(view.getContext(), "Post Deleted Successfully!" +
+                                    "Please refresh this page.", Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(view.getContext(), "ERROR: Cannot delete this post!", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
+
+        db.collection("POSTPLAZA")
+                .document(this.time.toString())
+                .delete();
     }
 
     public void modefy(View view) {
         Intent intent = new Intent(view.getContext(), ModifyPost.class);
         intent.putExtra("post_title", this.title);
         intent.putExtra("post_content", this.content);
-        intent.putExtra("post_image", this.imageUri.toString());
+        if (isWithImage()) {
+            intent.putExtra("post_image", this.imageUri.toString());
+        }
+        intent.putExtra("post_time", this.time.toString());
         startActivity(view.getContext(), intent, null);
     }
 

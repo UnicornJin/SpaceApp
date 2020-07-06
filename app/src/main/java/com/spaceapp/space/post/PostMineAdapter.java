@@ -15,6 +15,8 @@ import com.spaceapp.space.ui.mine.MineFragment;
 
 import java.util.List;
 
+import static androidx.core.content.ContextCompat.startActivity;
+
 public class PostMineAdapter extends RecyclerView.Adapter<PostMineAdapter.ViewHolder>{
     private List<Post> mPostList;
 

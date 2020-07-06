@@ -125,6 +125,7 @@ public class MineFragment extends Fragment {
 
     @Override
     public void onResume() {
+        super.onResume();
         if (MainActivity.currentUser == null) {
 
         } else {
@@ -145,7 +146,7 @@ public class MineFragment extends Fragment {
                         public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
                             if (e != null) {
                                 Log.w(">>>>>", "Load my posts error:" + e);
-                            } else {
+                            } else if (!queryDocumentSnapshots.isEmpty()){
                                 for (final QueryDocumentSnapshot doc : queryDocumentSnapshots) {
                                     if (doc.getBoolean("withImage")) {
                                         FirebaseStorage storage = FirebaseStorage.getInstance();
@@ -154,6 +155,7 @@ public class MineFragment extends Fragment {
                                                 .child("PostImageStorage")
                                                 .child(MainActivity.currentUser.getUid())
                                                 .child(doc.getTimestamp("time").toString() + ".jpg");
+                                        Log.i(">>>>>>", "Asking for photo" + imageRef.toString());
 
                                         try {
                                             final File localTemp = File.createTempFile(doc.getTimestamp("time").toString(), ".jpg");
@@ -201,11 +203,12 @@ public class MineFragment extends Fragment {
                                         adapter.notifyDataSetChanged();
                                     }
                                 }
+                            } else {
+                                Log.i(">>>>>:", "empty post list");
                             }
                         }
                     });
         }
-        super.onResume();
     }
 
 }

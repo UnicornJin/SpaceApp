@@ -4,13 +4,17 @@
     android:layout_height="match_parent">
 
     <item
-        android:id = "@+id/chatwindwo_delete"
+        android:id = "@+id/chatwindow_delete"
         android:title = "Delete Contact"
         />
 
     <item
         android:id="@+id/chatwindow_block"
         android:title="Block Contact"
+        />
+    <item
+        android:id="@+id/chatwindow_rename"
+        android:title="Rename Contact"
         />
 
 </menu>
