@@ -17,8 +17,10 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentChange;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
@@ -120,20 +122,36 @@ public class MessageFragment extends Fragment {
                                                 newContact.setLastMsgTime(dc.getDocument().getTimestamp("time").getSeconds());
                                             }
 
-                                            if (contactList.contains(newContact)) {
-                                                contactList.remove(newContact);
-                                                contactList.add(newContact);
-                                            } else {
-                                                contactList.add(newContact);
-                                            }
-
-                                            Collections.sort(contactList, new Comparator<Contact>() {
+                                            final boolean[] isBlocked = {false};
+                                            db.collection("USERDATA").document(MainActivity.currentUser.getUid())
+                                                    .collection("BLOCKLIST")
+                                                    .document(newContact.getUid())
+                                                    .get()
+                                            .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                                                 @Override
-                                                public int compare(Contact o1, Contact o2) {
-                                                    return (-1) * o1.getLastMsgTime().compareTo(o2.getLastMsgTime());
+                                                public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                                    if (documentSnapshot.getBoolean("isBlocked") != null) {
+                                                        isBlocked[0] = documentSnapshot.getBoolean("isBlocked");
+                                                    }
+
+                                                    if (isBlocked[0]) {
+
+                                                    }else if (contactList.contains(newContact)) {
+                                                        contactList.remove(newContact);
+                                                        contactList.add(newContact);
+                                                    } else {
+                                                        contactList.add(newContact);
+                                                    }
+
+                                                    Collections.sort(contactList, new Comparator<Contact>() {
+                                                        @Override
+                                                        public int compare(Contact o1, Contact o2) {
+                                                            return (-1) * o1.getLastMsgTime().compareTo(o2.getLastMsgTime());
+                                                        }
+                                                    });
+                                                    adapter.notifyDataSetChanged();
                                                 }
                                             });
-                                            adapter.notifyDataSetChanged();
                                         }
                                     });
                         }
