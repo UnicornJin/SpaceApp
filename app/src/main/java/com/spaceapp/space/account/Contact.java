@@ -2,19 +2,21 @@ package com.spaceapp.space.account;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.spaceapp.space.MainActivity;
 
 import java.io.Serializable;
 import java.util.HashMap;
 
+/**
+ * This class is contact of user.
+ * And it holds some operations on contact.
+ */
 public class Contact implements Serializable {
 
     private final long serialVersionUID = 123456;
@@ -52,6 +54,12 @@ public class Contact implements Serializable {
 
     public Long getLastMsgTime() { return this.lastMsgTime; }
 
+    /**
+     * This method determines how to decide whether an object is equal to the contact.
+     * only the contacts with the same uid will be equal to the contact.
+     * @param obj the object waiting to be check.
+     * @return true for obj is the same with the contact, false for not.
+     */
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Contact) {
@@ -62,6 +70,11 @@ public class Contact implements Serializable {
     }
 
 
+    /**
+     * This method will ask user for confirmation on deleting the contact,
+     * then start delete process.
+     * @param view current view, for convenience
+     */
     public void delete(final View view) {
         AlertDialog.Builder dialog = new AlertDialog.Builder(view.getContext());
         dialog.setTitle("Delete Contact");
@@ -82,6 +95,10 @@ public class Contact implements Serializable {
         dialog.show();
     }
 
+    /**
+     * This method will send delete contact order to database.
+     * @param view current view, for convenience
+     */
     private void deleteHelper(final View view) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("USERDATA")
@@ -96,6 +113,10 @@ public class Contact implements Serializable {
         });
     }
 
+    /**
+     * This method will ask user for confirmation on blocking contact.
+     * @param view current view, for convenience
+     */
     public void block(final View view) {
         AlertDialog.Builder dialog = new AlertDialog.Builder(view.getContext());
         dialog.setTitle("Block Contact");
@@ -116,6 +137,10 @@ public class Contact implements Serializable {
         dialog.show();
     }
 
+    /**
+     * This method will send block contact order to database.
+     * @param view current view, for convenience
+     */
     private void blockHelper(final View view) {
         HashMap<String, Boolean> blockKey = new HashMap<>();
         blockKey.put("isBlocked", true);
@@ -134,6 +159,10 @@ public class Contact implements Serializable {
         });
     }
 
+    /**
+     * This method will ask user for the new name of the contact.
+     * @param view current view, for convenience.
+     */
     public void rename(final View view) {
         final EditText ed = new EditText(view.getContext());
         ed.setHint("New Contact name");
@@ -156,6 +185,11 @@ public class Contact implements Serializable {
         dialog.show();
     }
 
+    /**
+     * This method will send new name of contact to database.
+     * @param view current view for convenience
+     * @param newName new contact name from the user.
+     */
     private void renameHelper(final View view, String newName) {
         if (!newName.isEmpty()) {
             FirebaseFirestore db = FirebaseFirestore.getInstance();

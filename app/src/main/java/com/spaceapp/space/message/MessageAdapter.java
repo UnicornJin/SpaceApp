@@ -12,6 +12,11 @@ import com.spaceapp.space.R;
 
 import java.util.List;
 
+/**
+ * This class helps to fit message objects into correct layout file.
+ *
+ * This class is written according to rule of Android.
+ */
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHolder> {
     private List<Message> msgItemList;
 

@@ -28,6 +28,9 @@ import com.spaceapp.space.R;
 
 import java.util.ArrayList;
 
+/**
+ * This activity will help to create a new post.
+ */
 public class NewPost extends AppCompatActivity {
     private final int ADD_PHOTO = 1;
 
@@ -38,6 +41,10 @@ public class NewPost extends AppCompatActivity {
 
     Photo mSelected;
 
+    /**
+     * Load the newPost layout
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,7 +56,7 @@ public class NewPost extends AppCompatActivity {
         tempImage = (ImageView) findViewById(R.id.newPost_choosenimage);
         tempImage.setVisibility(View.INVISIBLE);
 
-
+        //After the user tapping send button, Space generate a post object and start sending process.
         ((Button) findViewById(R.id.send_post)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -70,6 +77,7 @@ public class NewPost extends AppCompatActivity {
             }
         });
 
+        //This button helps the user to start adding photo to the post.
         ((Button) findViewById(R.id.newPost_addphoto)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -80,6 +88,12 @@ public class NewPost extends AppCompatActivity {
         });
     }
 
+    /**
+     * Handle photo gotten from photo selection activity.
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -94,11 +108,16 @@ public class NewPost extends AppCompatActivity {
         }
     }
 
+    /**
+     * This method will send the post created by user to database.
+     * @param post the new post created
+     */
     private void sendPost(final Post post) {
 
         final Post[] sentingPost = new Post[1];
 
-        if (post.isWithImage()) {
+        //have / do not have image, should be handled differently
+        if (post.isWithImage()) { //If the post is with image, we need to upload the image and store address of image
             FirebaseStorage storage = FirebaseStorage.getInstance();
             final StorageReference imageRef = storage.getReference()
                     .child("userData")
@@ -147,7 +166,7 @@ public class NewPost extends AppCompatActivity {
                     }
                 }
             });
-        } else {
+        } else { //This part deal with posts without image
             sentingPost[0] = new Post(
                     post.getAuthor(),
                     post.getContent(),

@@ -6,10 +6,18 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 
+/**
+ * This activity is the first page shown after executing Space App.
+ */
 public class SplashActivity extends AppCompatActivity {
 
     private final int SPLASH_DISPLAY_TIME = 2000;
 
+    /**
+     * This method helps show Space Logo for 2 seconds
+     * Then start MainActivity.
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

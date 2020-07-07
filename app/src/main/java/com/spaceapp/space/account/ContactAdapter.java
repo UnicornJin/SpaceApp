@@ -11,6 +11,12 @@ import com.spaceapp.space.R;
 
 import java.util.List;
 
+/**
+ * When we need to show each contact in message list,
+ * this class helps to load layout
+ *
+ * All these are written according to rules of Android,
+ */
 public class ContactAdapter extends ArrayAdapter<Contact> {
 
     private int resourceId;
@@ -20,6 +26,13 @@ public class ContactAdapter extends ArrayAdapter<Contact> {
         this.resourceId = nameResourceId;
     }
 
+    /**
+     * this method will assign correct content to each textview and return the whole view.
+     * @param position
+     * @param convertView
+     * @param parent
+     * @return
+     */
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         Contact contact = getItem(position);

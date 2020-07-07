@@ -15,12 +15,21 @@ import com.spaceapp.space.R;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * When the user want to have a chat with a post owner,
+ * this class will help them.
+ */
 public class AddContact extends AppCompatActivity {
 
     EditText my_name;
     EditText his_name;
     Button Add;
 
+    /**
+     * The user need to name the contact and name himself.
+     * So load the naming page first and then send chat request.
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,8 +45,10 @@ public class AddContact extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (my_name.getText().length() == 0 || his_name.getText().length() == 0) {
+                    //Deal with invalid name
                     Toast.makeText(AddContact.this, "Information needed", Toast.LENGTH_SHORT).show();
                 } else {
+                    //After tapping the Add button, Space will generate data needed and send to database.
                     String myName = my_name.getText().toString();
                     String ContactName = his_name.getText().toString();
 

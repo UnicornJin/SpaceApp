@@ -32,6 +32,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * This is the Plaza page of Space App,
+ * User can read others posts here.
+ *
+ * All posts will be sort according to post time.
+ */
 public class PlazaFragment extends Fragment {
 
     List<Post> plazaPostList = new ArrayList<>();
@@ -48,6 +54,7 @@ public class PlazaFragment extends Fragment {
 
         plazaPosts = (RecyclerView) root.findViewById(R.id.plaza_posts);
 
+        //Swipe down and refresh post list.
         plazaRefresh = (SwipeRefreshLayout) root.findViewById(R.id.plaza_swipeRefreshLayout);
         plazaRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -61,6 +68,9 @@ public class PlazaFragment extends Fragment {
         return root;
     }
 
+    /**
+     * Load post list from database then sort and show them correctly
+     */
     @Override
     public void onResume() {
         super.onResume();

@@ -11,6 +11,12 @@ import com.huantansheng.easyphotos.engine.ImageEngine;
 import static com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade;
 
 /**
+ * This class is for using EasyPhoto the 3-party repo.
+ *
+ * All the codes is copied from EasyPhoto github page.
+ */
+
+/**
  * Glide4.x的加载图片引擎实现,单例模式
  * Glide4.x的缓存机制更加智能，已经达到无需配置的境界。如果使用Glide3.x，需要考虑缓存机制。
  * Created by huan on 2018/1/15.

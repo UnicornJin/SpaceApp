@@ -43,6 +43,11 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+/**
+ * This is the personal information page of Space App
+ *
+ * Includes email of current user and post list.
+ */
 public class MineFragment extends Fragment {
 
     List<Post> myPostList = new ArrayList<>();
@@ -54,6 +59,7 @@ public class MineFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
+        //If now the App is not logged in, it will jump to login page.
         if (MainActivity.currentUser == null) {
             View root = inflater.inflate(R.layout.fragment_mine_no_log_in, container, false);
 
@@ -67,6 +73,7 @@ public class MineFragment extends Fragment {
 
             return root;
         } else {
+            //Load the email from the database
             final View root = inflater.inflate(R.layout.fragment_mine, container, false);
             thisView = root;
 
@@ -92,8 +99,7 @@ public class MineFragment extends Fragment {
                 }
             });
 
-
-
+            //log out button
             ((Button) root.findViewById(R.id.mine_logout)).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -102,6 +108,7 @@ public class MineFragment extends Fragment {
                 }
             });
 
+            //Tap on this button and write new post.
             ((Button) root.findViewById(R.id.mine_newPost)).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -110,6 +117,7 @@ public class MineFragment extends Fragment {
                 }
             });
 
+            //swipe down the post list and refresh it.
             ((SwipeRefreshLayout) root.findViewById(R.id.mine_swipe)).setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                 @Override
                 public void onRefresh() {
@@ -123,6 +131,9 @@ public class MineFragment extends Fragment {
 
     }
 
+    /**
+     * load the post list from database, sort them and show them correctly.
+     */
     @Override
     public void onResume() {
         super.onResume();

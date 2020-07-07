@@ -17,6 +17,11 @@ import java.util.List;
 
 import static androidx.core.content.ContextCompat.startActivity;
 
+/**
+ * This Adapter helps to show a post in Mine page.
+ *
+ * It has modify and delete function.
+ */
 public class PostMineAdapter extends RecyclerView.Adapter<PostMineAdapter.ViewHolder>{
     private List<Post> mPostList;
 

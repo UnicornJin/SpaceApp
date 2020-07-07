@@ -23,6 +23,11 @@ import com.spaceapp.space.account.AddContact;
 
 import java.util.List;
 
+/**
+ * This adapter helps to show a post in Plaza page=
+ *
+ * It has add contact function.
+ */
 public class PostPlazaAdapter extends RecyclerView.Adapter<PostPlazaAdapter.ViewHolder>{
     private List<Post> mPostList;
 

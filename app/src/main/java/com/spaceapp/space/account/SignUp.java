@@ -23,6 +23,10 @@ import java.util.Map;
 
 import static com.spaceapp.space.MainActivity.mAuth;
 
+/**
+ * If the user do not have a Space Account and he/she wants to create one,
+ * this class will help them.
+ */
 public class SignUp extends AppCompatActivity {
 
     private EditText signupEmail;
@@ -31,6 +35,11 @@ public class SignUp extends AppCompatActivity {
 
     private Button signupButton;
 
+    /**
+     * This method will load the layout for sign up activity.
+     * And it will sign following behavior for all buttons.
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,13 +50,15 @@ public class SignUp extends AppCompatActivity {
         signupConfPassword = (EditText) findViewById(R.id.signup_conform_password);
         signupButton = (Button) findViewById(R.id.signup_signup);
 
+        //After tapping on sign up button, program will check effectiveness of email and password
+        //Then create account.
         signupButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String email = signupEmail.getText().toString();
                 String password = signupPassword.getText().toString();
                 String confpassword = signupConfPassword.getText().toString();
-                if (password.equals(confpassword)) {
+                if (!email.isEmpty() && password.equals(confpassword) && password.length() > 0) {
                     createAccount(email, password);
                 } else {
                     Toast.makeText(SignUp.this,"Confirm password error.", Toast.LENGTH_SHORT).show();
@@ -57,6 +68,11 @@ public class SignUp extends AppCompatActivity {
 
     }
 
+    /**
+     * This method is for creating account with email and password.
+     * @param email email needed for creating account
+     * @param password password setted for the account
+     */
     private void createAccount(final String email, String password) {
 
         mAuth.createUserWithEmailAndPassword(email, password)

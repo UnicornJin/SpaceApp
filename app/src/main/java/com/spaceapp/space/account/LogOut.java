@@ -11,8 +11,17 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.spaceapp.space.MainActivity;
 import com.spaceapp.space.R;
 
+
+/**
+ * This class focus on log out activity
+ */
 public class LogOut extends AppCompatActivity {
 
+    /**
+     * This method will start a page to ask user for confirmation of log out.
+     * Then it will clear all activities in activity stack and start login activity.
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

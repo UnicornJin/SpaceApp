@@ -41,6 +41,10 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+/**
+ * This is the message page of Space App
+ * All contacts will be shown here
+ */
 public class MessageFragment extends Fragment {
 
     private List<Contact> contactList = new ArrayList<>();
@@ -57,6 +61,9 @@ public class MessageFragment extends Fragment {
         adapter = new ContactAdapter(MessageFragment.this.getContext(), R.layout.layout_contact, contactList);
         ListView listView = (ListView) root.findViewById(R.id.msg_list);
         listView.setAdapter(adapter);
+
+        //When the user tap on a contact
+        //a chat window will appear.
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -67,6 +74,7 @@ public class MessageFragment extends Fragment {
             }
         });
 
+        //swipe down will refresh the contact list.
         messageRefresh = (SwipeRefreshLayout) root.findViewById(R.id.message_swipe);
         messageRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -79,6 +87,11 @@ public class MessageFragment extends Fragment {
         return root;
     }
 
+    /**
+     * get contact list from database and sort them according to time of the last message.
+     * check whether they are blocked
+     * IF they are blocked, the contact will not be shown in the contact list.
+     */
     @Override
     public void onResume() {
         super.onResume();

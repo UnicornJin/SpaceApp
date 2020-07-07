@@ -25,6 +25,12 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+
+/**
+ * Hi This is Yuze. Welcome to read Space App source code.
+ *
+ * This class below is our Main Activity.
+ */
 public class MainActivity extends AppCompatActivity {
 
     public static FirebaseAuth mAuth;
@@ -33,29 +39,41 @@ public class MainActivity extends AppCompatActivity {
 
     public static GoogleSignInClient mGoogleSignInClient;
 
+    /**
+     * This method is the most important.
+     * When you open our App, After the Splash page, this method will be executed
+     * and finish the basic set up.
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        //This variable is for implement the Google Signin function
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken("226047057-rqrat8dcv0e7mtlkl7g2n31j38il7hbu.apps.googleusercontent.com")
                 .requestEmail()
                 .build();
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
+        //This "currentUser" is the storage of current user, other class may need this later.
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
 
+        //If currentUser is null, which means now no user logged in, then start logging in process
         if (currentUser == null) {
+            //Check whether there is a google account logged in before
             googleAccount = GoogleSignIn.getLastSignedInAccount(this);
             if (googleAccount == null) {
+                // No logged in Google Account also, start the LogIn activity and clean activity stack.
                 Intent intent = new Intent(this, LogIn.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
             } else {
+                //There has been a google account, then we will login with this google account.
                 firebaseAuthWithGoogle(googleAccount.getIdToken());
             }
-        } else {
+        } else { //If there have been a signed in user, Space will load the Home page.
             setContentView(R.layout.activity_main);
             BottomNavigationView navView = findViewById(R.id.nav_view);
             // Passing each menu ID as a set of Ids because each
@@ -69,6 +87,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * This method is concentrated on solving google signin problem.
+     * @param idToken the id of google account
+     */
     private void firebaseAuthWithGoogle(String idToken) {
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         mAuth.signInWithCredential(credential)

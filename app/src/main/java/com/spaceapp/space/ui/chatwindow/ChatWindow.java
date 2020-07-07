@@ -1,6 +1,5 @@
 package com.spaceapp.space.ui.chatwindow;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -9,21 +8,16 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.spaceapp.space.MainActivity;
 import com.spaceapp.space.R;
@@ -36,6 +30,10 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+/**
+ * This activity is the chat window of Space App
+ * When the user tap on a contact, program will start this activity.
+ */
 public class ChatWindow extends AppCompatActivity {
     private Toolbar chatWindowToolbar;
 
@@ -69,12 +67,16 @@ public class ChatWindow extends AppCompatActivity {
         chatWindowToolbar = (Toolbar) findViewById(R.id.chat_window_toolbar);
         chatWindowToolbar.inflateMenu(R.menu.chat_window_menu);
         ((TextView) findViewById(R.id.chatting_name)).setText(contact.getName());
+
+        //assign the top back button a back function
         chatWindowToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 onBackPressed();
             }
         });
+
+        //set functions to each menu button
         chatWindowToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
@@ -95,6 +97,7 @@ public class ChatWindow extends AppCompatActivity {
             }
         });
 
+        //Load message list from database.
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("USERDATA")
                 .document(MainActivity.currentUser.getUid())
@@ -127,6 +130,7 @@ public class ChatWindow extends AppCompatActivity {
 
 
 
+        //send message button, will start send message process.
         send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -141,6 +145,11 @@ public class ChatWindow extends AppCompatActivity {
 
     }
 
+    /**
+     * This method will send message to database.
+     * @param msg the message object generated.
+     * @param contact the contact user chatting with
+     */
     private void sendMsg(Message msg, Contact contact) {
 
         Message msgToMe = new Message(msg.getTime(), msg.getContent(), true);

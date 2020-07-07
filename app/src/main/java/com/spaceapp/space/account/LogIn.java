@@ -27,6 +27,9 @@ import com.spaceapp.space.R;
 import static com.spaceapp.space.MainActivity.mAuth;
 import static com.spaceapp.space.MainActivity.mGoogleSignInClient;
 
+/**
+ * This class focus on LogIn tasks.
+ */
 public class LogIn extends AppCompatActivity {
 
     private static final int RC_SIGN_IN = 11;
@@ -36,8 +39,13 @@ public class LogIn extends AppCompatActivity {
     private Button signup;
     private SignInButton googleSignIn;
 
+    /**
+     * This method will load the layout and then sign following behaviors for each button.
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        //Load the layout file
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log_in);
 
@@ -48,6 +56,7 @@ public class LogIn extends AppCompatActivity {
         signup = (Button) findViewById(R.id.signin_signup);
         googleSignIn = (SignInButton) findViewById(R.id.google_sign_in);
 
+        //If user tap on Sign up button, then we execute sign up activity
         signup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -56,6 +65,7 @@ public class LogIn extends AppCompatActivity {
             }
         });
 
+        //If the user decided to log in, we execute signIn method with his email and password.
         signin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -65,6 +75,8 @@ public class LogIn extends AppCompatActivity {
             }
         });
 
+        //If the user decided to log in with his google account,
+        // we will start the google sign in process.
         googleSignIn.setSize(SignInButton.SIZE_STANDARD);
         googleSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -75,29 +87,51 @@ public class LogIn extends AppCompatActivity {
 
     }
 
+    //This method will make Space log in with the user's email and password
     private void signIn(String email, String password) {
-        mAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            MainActivity.currentUser = mAuth.getCurrentUser();
-                            Intent intent = new Intent(LogIn.this, MainActivity.class);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(intent);
-                        } else {
-                            Toast.makeText(LogIn.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
+        if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(LogIn.this,
+                    "Something wrong with your email or password.", Toast.LENGTH_SHORT).show();
+        } else {
+            mAuth.signInWithEmailAndPassword(email, password)
+                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            if (task.isSuccessful()) {
+                                MainActivity.currentUser = mAuth.getCurrentUser();
+                                Intent intent = new Intent(LogIn.this, MainActivity.class);
+                                intent.setFlags(
+                                        Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                                | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                            } else {
+                                Toast.makeText(LogIn.this, "Authentication failed.",
+                                        Toast.LENGTH_SHORT).show();
+                            }
                         }
-                    }
-                });
+                    });
+        }
     }
 
+    /**
+     * This method is the start of google sign in
+     * It will call the system to start a google sign in activity
+     * and receive result from the activity.
+     */
     private void signInWithGoogle() {
         Intent signInIntent = mGoogleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 
+    /**
+     * After getting the result, we know the google account of the user.
+     * Then we log this account in using firebase auth
+     *
+     * These parameters are all data needed for correctly distinguish result and using them
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -114,6 +148,10 @@ public class LogIn extends AppCompatActivity {
         }
     }
 
+    /**
+     * This method is for Auth of google account.
+     * @param idToken
+     */
     private void firebaseAuthWithGoogle(String idToken) {
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         mAuth.signInWithCredential(credential)

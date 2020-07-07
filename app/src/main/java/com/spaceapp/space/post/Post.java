@@ -17,6 +17,9 @@ import com.spaceapp.space.MainActivity;
 
 import static androidx.core.content.ContextCompat.startActivity;
 
+/**
+ * This is the Post class, includes necessary methods for post handling.
+ */
 public class Post {
     private String author;
     private String content;
@@ -67,13 +70,18 @@ public class Post {
         return title;
     }
 
-    public boolean isWithImage() {return withImage; }
+    public boolean isWithImage() { return withImage; }
 
     public void setImageUri(Uri uri) {
         this.withImage = true;
         this.imageUri = uri;
     }
 
+    /**
+     * Before real delete a post, ask the user for confirmation.
+     * Then start deleting process.
+     * @param view
+     */
     public void delete(final View view) {
         AlertDialog.Builder dialog = new AlertDialog.Builder(view.getContext());
         dialog.setTitle("Delete Post");
@@ -95,6 +103,10 @@ public class Post {
 
     }
 
+    /**
+     * send delete order to database.
+     * @param view
+     */
     private void deleteHelper(final View view) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("USERDATA")
@@ -119,6 +131,10 @@ public class Post {
                 .delete();
     }
 
+    /**
+     * start modify activity.
+     * @param view
+     */
     public void modefy(View view) {
         Intent intent = new Intent(view.getContext(), ModifyPost.class);
         intent.putExtra("post_title", this.title);

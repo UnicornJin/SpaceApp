@@ -2,6 +2,10 @@ package com.spaceapp.space.message;
 
 import com.google.firebase.Timestamp;
 
+
+/**
+ * This class stands for message objects.
+ */
 public class Message {
 
     private String content;

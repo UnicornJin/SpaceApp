@@ -29,6 +29,9 @@ import com.spaceapp.space.R;
 
 import java.util.ArrayList;
 
+/**
+ * This class is used for post modification.
+ */
 public class ModifyPost extends AppCompatActivity {
 
     private final int CHANGE_PHOTO = 2;
@@ -44,6 +47,10 @@ public class ModifyPost extends AppCompatActivity {
 
     Photo mSelected;
 
+    /**
+     * This method load modify page first and then assign functions to each button
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,6 +71,7 @@ public class ModifyPost extends AppCompatActivity {
             imageChosen.setImageURI(imageUri);
         }
 
+        //modPhoto button will start a photo selection activity and replace original photo with chosen one.
         this.modPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -72,6 +80,8 @@ public class ModifyPost extends AppCompatActivity {
                         .start(CHANGE_PHOTO);
             }
         });
+
+        //mod button will create a Post object and start the sending process
         this.mod.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -98,6 +108,8 @@ public class ModifyPost extends AppCompatActivity {
                 modifypost(sendingPost, intent.getStringExtra("post_time"));
             }
         });
+
+
         this.cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -107,6 +119,12 @@ public class ModifyPost extends AppCompatActivity {
 
     }
 
+    /**
+     * After choosing photo, this method handle the photo result.
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -120,6 +138,11 @@ public class ModifyPost extends AppCompatActivity {
         }
     }
 
+    /**
+     * This method will update the modified post to database.
+     * @param post the post needed to send
+     * @param time time of the original post, need this to change the previous post.
+     */
     private void modifypost(final Post post, String time) {
         final Post[] sentingPost = new Post[1];
 
