@@ -18,7 +18,10 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -86,26 +89,14 @@ public class ModifyPost extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Post sendingPost;
-                if (mSelected != null) {
+                if (imageUri != null){
                     sendingPost = new Post(MainActivity.currentUser.getUid(),
                             modContent.getText().toString(),
                             Timestamp.now(),
-                            mSelected.uri,
+                            imageUri.toString(),
                             modTitle.getText().toString());
-                } else if (imageUri != null){
-                    sendingPost = new Post(MainActivity.currentUser.getUid(),
-                            modContent.getText().toString(),
-                            Timestamp.now(),
-                            imageUri,
-                            modTitle.getText().toString());
-                } else {
-                    sendingPost = new Post(MainActivity.currentUser.getUid(),
-                            modContent.getText().toString(),
-                            Timestamp.now(),
-                            modTitle.getText().toString());
+                    modifypost(sendingPost, intent.getStringExtra("post_time"));
                 }
-
-                modifypost(sendingPost, intent.getStringExtra("post_time"));
             }
         });
 
@@ -133,6 +124,7 @@ public class ModifyPost extends AppCompatActivity {
             ArrayList<Photo> resultPhotos = data.getParcelableArrayListExtra(EasyPhotos.RESULT_PHOTOS);
 
             mSelected = resultPhotos.get(0);
+            imageUri = mSelected.uri;
 
             GlideEngine.getInstance().loadPhoto(ModifyPost.this, mSelected.uri, imageChosen);
         }
@@ -144,109 +136,53 @@ public class ModifyPost extends AppCompatActivity {
      * @param time time of the original post, need this to change the previous post.
      */
     private void modifypost(final Post post, String time) {
-        final Post[] sentingPost = new Post[1];
 
         final FirebaseFirestore db = FirebaseFirestore.getInstance();
         final FirebaseStorage storage = FirebaseStorage.getInstance();
 
-        db.collection("POSTPLAZA").document(time).delete();
-        db.collection("USERDATA")
-                .document(MainActivity.currentUser.getUid())
-                .collection("POSTS")
-                .document(time)
-                .delete()
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
+        Log.i(">>>>>>>", "time:" + time);
+
+        db.collection("posts")
+                .whereEqualTo("authorId", MainActivity.currentUser.getUid())
+                .whereEqualTo("timeString", time)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
-                    public void onSuccess(Void aVoid) {
-                        if (post.isWithImage()) {
-                            final StorageReference imageRef = storage.getReference()
-                                    .child("userData")
-                                    .child("PostImageStorage")
-                                    .child(MainActivity.currentUser.getUid())
-                                    .child(post.getTime().toString() + ".jpg");
-
-                            imageRef.putFile(post.getImageUri()).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-                                    if (task.isSuccessful()) {
-                                        sentingPost[0] = new Post(
-                                                post.getAuthor(),
-                                                post.getContent(),
-                                                post.getTime(),
-                                                null,
-                                                post.getTitle()
-                                        );
-
-                                        Log.i(">>>>>>>", "Senting post:" + sentingPost[0].toString());
-
-                                        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-                                        db.collection("POSTPLAZA")
-                                                .document(post.getTime().toString())
-                                                .set(sentingPost[0]);
-
-                                        db.collection("USERDATA")
-                                                .document(MainActivity.currentUser.getUid())
-                                                .collection("POSTS")
-                                                .document(post.getTime().toString())
-                                                .set(sentingPost[0])
-                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                    @Override
-                                                    public void onSuccess(Void aVoid) {
-                                                        Log.i(">>>>>>>>", "Modify Succeed");
-
-                                                        onBackPressed();
-                                                    }
-                                                }).addOnFailureListener(new OnFailureListener() {
-                                            @Override
-                                            public void onFailure(@NonNull Exception e) {
-                                                Toast.makeText(ModifyPost.this, "Modify Failed", Toast.LENGTH_SHORT).show();
-                                            }
-                                        });
-                                    }
-                                }
-                            });
-                        } else {
-                            sentingPost[0] = new Post(
-                                    post.getAuthor(),
-                                    post.getContent(),
-                                    post.getTime(),
-                                    post.getTitle()
-                            );
-
-                            Log.i(">>>>>>>", "Senting post:" + sentingPost[0].toString());
-
-                            db.collection("POSTPLAZA")
-                                    .document(post.getTime().toString())
-                                    .set(sentingPost[0]);
-
-                            db.collection("USERDATA")
-                                    .document(MainActivity.currentUser.getUid())
-                                    .collection("POSTS")
-                                    .document(post.getTime().toString())
-                                    .set(sentingPost[0])
-                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                        @Override
-                                        public void onSuccess(Void aVoid) {
-                                            Log.i(">>>>>>>>", "Post Succeed");
-
-                                            onBackPressed();
-                                        }
-                                    }).addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    Toast.makeText(ModifyPost.this, "Post Failed", Toast.LENGTH_SHORT).show();
-                                }
-                            });
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        for (QueryDocumentSnapshot q : queryDocumentSnapshots) {
+                            q.getReference().delete();
                         }
                     }
                 });
 
         storage.getReference()
-                .child("userData")
-                .child("PostImageStorage")
-                .child(MainActivity.currentUser.getUid())
-                .child(time + ".jpg")
-                .delete();
+                .child("posts/" + post.getAuthorId() + post.getTimeString() + ".jpg")
+                .putFile(Uri.parse(post.getImage()))
+                .addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull final Task<UploadTask.TaskSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            storage.getReference("posts/" + post.getAuthorId() + post.getTimeString() + ".jpg")
+                                    .getDownloadUrl()
+                                    .addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                        @Override
+                                        public void onSuccess(Uri uri) {
+                                            Log.i(">>>>>>>", "imageUrl:" + uri.toString());
+                                            post.setImage(uri.toString());
+                                            post.setAuthorId(MainActivity.currentUser.getUid());
+                                            db.collection("posts")
+                                                    .document()
+                                                    .set(post)
+                                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                        @Override
+                                                        public void onSuccess(Void aVoid) {
+                                                            onBackPressed();
+                                                        }
+                                                    });
+                                        }
+                                    });
+                        }
+                    }
+                });
     }
 }

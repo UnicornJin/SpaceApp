@@ -1,6 +1,7 @@
 package com.spaceapp.space.post;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -62,19 +63,12 @@ public class PostMineAdapter extends RecyclerView.Adapter<PostMineAdapter.ViewHo
     public void onBindViewHolder(final ViewHolder holder, int position) {
         final Post post = mPostList.get(position);
 
-        if (post.isWithImage()) {
-            holder.postTitle.setText(post.getTitle());
-            holder.postContent.setText(post.getContent());
-            holder.postImage.setVisibility(View.VISIBLE);
-            holder.postImage.setMaxHeight(250);
-            holder.postTime.setText(post.getTimeString());
-            holder.postImage.setImageURI(post.getImageUri());
-        } else {
-            holder.postTitle.setText(post.getTitle());
-            holder.postContent.setText(post.getContent());
-            holder.postImage.setVisibility(View.GONE);
-            holder.postTime.setText(post.getTimeString());
-        }
+        holder.postTitle.setText(post.getTitle());
+        holder.postContent.setText(post.getContent());
+        holder.postImage.setVisibility(View.VISIBLE);
+        holder.postImage.setMaxHeight(250);
+        holder.postTime.setText(post.getTimeString());
+        holder.postImage.setImageURI(Uri.parse(post.getImage()));
 
         holder.delete.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -82,7 +76,6 @@ public class PostMineAdapter extends RecyclerView.Adapter<PostMineAdapter.ViewHo
                 post.delete(holder.view);
             }
         });
-
         holder.modefy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

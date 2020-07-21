@@ -7,11 +7,6 @@
         android:id = "@+id/chatwindow_delete"
         android:title = "Delete Contact"
         />
-
-    <item
-        android:id="@+id/chatwindow_block"
-        android:title="Block Contact"
-        />
     <item
         android:id="@+id/chatwindow_rename"
         android:title="Rename Contact"

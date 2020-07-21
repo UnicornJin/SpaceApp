@@ -37,13 +37,8 @@ public class ContactAdapter extends ArrayAdapter<Contact> {
     public View getView(int position, View convertView, ViewGroup parent) {
         Contact contact = getItem(position);
         View view = LayoutInflater.from(getContext()).inflate(resourceId, parent, false);
-
         TextView name = (TextView) view.findViewById(R.id.name);
-        TextView lastMsg = (TextView) view.findViewById(R.id.lastMsg);
-
-        name.setText(contact.getName());
-        lastMsg.setText(contact.getLastMsg());
-
+        name.setText(contact.getContactName());
         return view;
     }
 }

@@ -98,84 +98,25 @@ public class MessageFragment extends Fragment {
 
         contactList.clear();
         final FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("USERDATA").document(MainActivity.currentUser.getUid())
-                .collection("CONTACTS")
+        db.collection("friends")
+                .whereEqualTo("personAId", MainActivity.currentUser.getUid())
                 .addSnapshotListener(new EventListener<QuerySnapshot>() {
                     @Override
                     public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
                         if (e != null) {
                             Log.w(">>>>", "Contact List Listen Failed: " + e.toString());
+                        } else {
+                            if (!queryDocumentSnapshots.isEmpty()){
+                                for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                                    final Contact newContact = new Contact();
+                                    newContact.setContactName(doc.getString("nameBToA"));
+                                    newContact.setMyname(doc.getString("nameAToB"));
+                                    newContact.setUid(doc.getString("personBId"));
+                                    contactList.add(newContact);
+                                }
+                            }
                         }
-
-                        for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                            String name = doc.getString("ContactName");
-                            String uid = doc.getString("Uid");
-
-                            final Contact newContact = new Contact();
-                            newContact.setName(name);
-                            newContact.setUid(uid);
-
-                            db.collection("USERDATA").document(MainActivity.currentUser.getUid())
-                                    .collection("CONTACTS")
-                                    .document(newContact.getUid())
-                                    .collection("MSGLIST")
-                                    .orderBy("time", Query.Direction.ASCENDING)
-                                    .addSnapshotListener(new EventListener<QuerySnapshot>() {
-                                        @Override
-                                        public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                                            if (e != null) {
-                                                Log.w(">>>>>", "Last message listen failed: " + e);
-                                            }
-
-                                            for (DocumentChange dc : queryDocumentSnapshots.getDocumentChanges()) {
-
-                                                Log.i(">>>>>>", "Last Message Added: " + dc.getDocument().getString("content"));
-
-                                                newContact.setLastMsg(dc.getDocument().getString("content"));
-                                                newContact.setLastMsgTime(dc.getDocument().getTimestamp("time").getSeconds());
-                                            }
-
-                                            final boolean[] isBlocked = {false};
-                                            db.collection("USERDATA").document(MainActivity.currentUser.getUid())
-                                                    .collection("BLOCKLIST")
-                                                    .document(newContact.getUid())
-                                                    .get()
-                                            .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                                                @Override
-                                                public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                                    if (documentSnapshot.getBoolean("isBlocked") != null) {
-                                                        isBlocked[0] = documentSnapshot.getBoolean("isBlocked");
-                                                    }
-
-                                                    if (isBlocked[0]) {
-
-                                                    }else if (contactList.contains(newContact)) {
-                                                        contactList.remove(newContact);
-                                                        contactList.add(newContact);
-                                                    } else {
-                                                        contactList.add(newContact);
-                                                    }
-
-                                                    Collections.sort(contactList, new Comparator<Contact>() {
-                                                        @Override
-                                                        public int compare(Contact o1, Contact o2) {
-                                                            return (-1) * o1.getLastMsgTime().compareTo(o2.getLastMsgTime());
-                                                        }
-                                                    });
-                                                    adapter.notifyDataSetChanged();
-                                                }
-                                            });
-                                        }
-                                    });
-                        }
-
                     }
                 });
-    }
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
     }
 }

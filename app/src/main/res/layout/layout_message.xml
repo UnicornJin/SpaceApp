@@ -6,12 +6,21 @@
     android:layout_height="wrap_content"
     android:padding="10dp">
 
+    <TextView
+        android:id="@+id/message_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"/>
+
+
     <LinearLayout
         android:id="@+id/left_chatbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="left"
         android:orientation="horizontal">
+
+
 
         <LinearLayout
             android:layout_width="wrap_content"

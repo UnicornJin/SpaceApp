@@ -48,20 +48,22 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mAuth = FirebaseAuth.getInstance();
 
         //This variable is for implement the Google Signin function
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken("226047057-rqrat8dcv0e7mtlkl7g2n31j38il7hbu.apps.googleusercontent.com")
+                .requestIdToken("767896223866-ssn52dc3bfkamrjpp5grjui0l5dq0vva.apps.googleusercontent.com")
                 .requestEmail()
                 .build();
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
         //This "currentUser" is the storage of current user, other class may need this later.
-        mAuth = FirebaseAuth.getInstance();
+
         currentUser = mAuth.getCurrentUser();
 
         //If currentUser is null, which means now no user logged in, then start logging in process
         if (currentUser == null) {
+            Log.i(">>>>", "here");
             //Check whether there is a google account logged in before
             googleAccount = GoogleSignIn.getLastSignedInAccount(this);
             if (googleAccount == null) {
@@ -104,6 +106,9 @@ public class MainActivity extends AppCompatActivity {
                             MainActivity.this.recreate();
                         } else {
                             Log.w(">>>>>>>", "signInWithCredential:failure", task.getException());
+                            Intent intent = new Intent(MainActivity.this, LogIn.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
                         }
                     }
                 });

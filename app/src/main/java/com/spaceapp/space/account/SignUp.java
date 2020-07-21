@@ -5,12 +5,14 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseUser;
@@ -80,32 +82,21 @@ public class SignUp extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            final FirebaseUser user = mAuth.getCurrentUser();
-
-                            Map<String, String> data = new HashMap<>();
-                            data.put("Email", email);
-
-                            FirebaseFirestore db = FirebaseFirestore.getInstance();
-                            db.collection("USERDATA").document(user.getUid())
-                                    .set(data).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
-                                        MainActivity.currentUser = user;
-                                        Intent intent = new Intent(SignUp.this, MainActivity.class);
-                                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                        startActivity(intent);
-                                    } else {
-                                        Toast.makeText(SignUp.this, "Sign up failed.",
-                                                Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                            });
-
+                            // Sign in success, update UI with the signed-in user's information
+                            Log.d(">>>>", "createUserWithEmail:success");
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            MainActivity.currentUser = user;
+                            Intent intent = new Intent(SignUp.this, MainActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
                         } else {
+                            // If sign in fails, display a message to the user.
+                            Log.w(">>>>>", "createUserWithEmail:failure", task.getException());
                             Toast.makeText(SignUp.this, "Sign up failed.",
                                     Toast.LENGTH_SHORT).show();
                         }
+
+                        // ...
                     }
                 });
     }

@@ -2,12 +2,15 @@ package com.spaceapp.space.account;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.spaceapp.space.MainActivity;
 
 import java.io.Serializable;
@@ -21,38 +24,33 @@ public class Contact implements Serializable {
 
     private final long serialVersionUID = 123456;
 
-    private String name;
-    private String lastMsg;
+    private String Contactname;
+    private String Myname;
     private String Uid;
-    private Long lastMsgTime;
 
-    public void setName(String name) {
-        this.name = name;
+    public void setContactName(String Contactname) {
+        this.Contactname = Contactname;
     }
 
-    public void setLastMsg(String lastMsg) {
-        this.lastMsg = lastMsg;
+    public void setMyname(String myname) {
+        Myname = myname;
     }
 
     public void setUid(String uid) {
         this.Uid = uid;
     }
 
-    public void setLastMsgTime(Long time) { this.lastMsgTime = time; }
-
-    public String getName() {
-        return this.name;
+    public String getContactName() {
+        return this.Contactname;
     }
 
-    public String getLastMsg() {
-        return lastMsg;
+    public String getMyname() {
+        return Myname;
     }
 
     public String getUid() {
         return this.Uid;
     }
-
-    public Long getLastMsgTime() { return this.lastMsgTime; }
 
     /**
      * This method determines how to decide whether an object is equal to the contact.
@@ -101,62 +99,32 @@ public class Contact implements Serializable {
      */
     private void deleteHelper(final View view) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("USERDATA")
-                .document(MainActivity.currentUser.getUid())
-                .collection("CONTACTS")
-                .document(this.Uid)
-                .delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+        db.collection("friends")
+                .whereEqualTo("personAId", MainActivity.currentUser.getUid())
+                .whereEqualTo("personBId", this.getUid())
+                .get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
             @Override
-            public void onSuccess(Void aVoid) {
-                Toast.makeText(view.getContext(), "Deleted Successfully.", Toast.LENGTH_SHORT).show();
+            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
+                    for (QueryDocumentSnapshot q : queryDocumentSnapshots) {
+                        q.getReference().delete();
+                    }
+                }
             }
-        });
-    }
-
-    /**
-     * This method will ask user for confirmation on blocking contact.
-     * @param view current view, for convenience
-     */
-    public void block(final View view) {
-        AlertDialog.Builder dialog = new AlertDialog.Builder(view.getContext());
-        dialog.setTitle("Block Contact");
-        dialog.setMessage("Are you sure about blocking this contact? You will not receive message from this contact anymore.");
-        dialog.setCancelable(false);
-        dialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-
-            }
-        });
-        dialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                blockHelper(view);
-            }
-        });
-        dialog.show();
-    }
-
-    /**
-     * This method will send block contact order to database.
-     * @param view current view, for convenience
-     */
-    private void blockHelper(final View view) {
-        HashMap<String, Boolean> blockKey = new HashMap<>();
-        blockKey.put("isBlocked", true);
-
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("USERDATA")
-                .document(MainActivity.currentUser.getUid())
-                .collection("BLOCKLIST")
-                .document(this.Uid)
-                .set(blockKey)
-        .addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void aVoid) {
-                Toast.makeText(view.getContext(), "Blocked Successfully", Toast.LENGTH_SHORT).show();
-            }
-        });
+            });
+        db.collection("friends")
+                .whereEqualTo("personBId", MainActivity.currentUser.getUid())
+                .whereEqualTo("personAId", this.getUid())
+                .get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
+                            for (QueryDocumentSnapshot q : queryDocumentSnapshots) {
+                                q.getReference().delete();
+                            }
+                        }
+                    }
+                });
     }
 
     /**
@@ -190,18 +158,45 @@ public class Contact implements Serializable {
      * @param view current view for convenience
      * @param newName new contact name from the user.
      */
-    private void renameHelper(final View view, String newName) {
+    private void renameHelper(final View view, final String newName) {
         if (!newName.isEmpty()) {
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            db.collection("USERDATA")
-                    .document(MainActivity.currentUser.getUid())
-                    .collection("CONTACTS")
-                    .document(this.Uid)
-                    .update("ContactName", newName)
-            .addOnSuccessListener(new OnSuccessListener<Void>() {
+
+            Log.i(">>>>", "My UID:" + MainActivity.currentUser.getUid());
+            Log.i(">>>>", "Contact UID:" + getUid());
+
+            final FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("friends")
+                    .whereEqualTo("personAId", MainActivity.currentUser.getUid())
+                    .whereEqualTo("personBId", getUid())
+                    .get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                 @Override
-                public void onSuccess(Void aVoid) {
-                    Toast.makeText(view.getContext(), "Renamed Successfully, please reopen this chatWindow.", Toast.LENGTH_SHORT).show();
+                public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+
+                    if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
+
+                        Log.i(">>>>>>", "q1:" + queryDocumentSnapshots);
+                        for (QueryDocumentSnapshot q : queryDocumentSnapshots) {
+                            Log.i(">>>>>>", "q2:" + q.toString());
+                            q.getReference().update("nameBToA", newName);
+                        }
+                    }
+                }
+            });
+            db.collection("friends")
+                    .whereEqualTo("personBId", MainActivity.currentUser.getUid())
+                    .whereEqualTo("personAId", getUid())
+                    .get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                @Override
+                public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+
+                    if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
+
+                        Log.i(">>>>>>", "q3:" + queryDocumentSnapshots);
+                        for (QueryDocumentSnapshot q : queryDocumentSnapshots) {
+                            Log.i(">>>>>>", "q4:" + q.toString());
+                            q.getReference().update("nameAToB", newName);
+                        }
+                    }
                 }
             });
         }

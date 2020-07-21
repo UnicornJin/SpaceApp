@@ -84,8 +84,8 @@ public class PlazaFragment extends Fragment {
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        db.collection("POSTPLAZA")
-                .orderBy("time", Query.Direction.DESCENDING)
+        db.collection("posts")
+                .orderBy("published", Query.Direction.DESCENDING)
                 .limit(10)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -93,57 +93,36 @@ public class PlazaFragment extends Fragment {
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             for (final DocumentSnapshot doc : task.getResult()) {
-                                if (doc.getBoolean("withImage")) {
-                                    FirebaseStorage storage = FirebaseStorage.getInstance();
-                                    StorageReference imageRef = storage.getReference()
-                                            .child("userData")
-                                            .child("PostImageStorage")
-                                            .child(doc.getString("author"))
-                                            .child(doc.getTimestamp("time").toString() + ".jpg");
+                                FirebaseStorage storage = FirebaseStorage.getInstance();
+                                StorageReference imageRef = storage.getReferenceFromUrl(doc.getString("image"));
 
-                                    try {
-                                        final File localTemp = File.createTempFile(doc.getTimestamp("time").toString(), ".jpg");
-                                        imageRef.getFile(localTemp).addOnCompleteListener(new OnCompleteListener<FileDownloadTask.TaskSnapshot>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<FileDownloadTask.TaskSnapshot> task) {
-                                                if (task.isSuccessful()) {
-                                                    Post tempWithImage = new Post(
-                                                            doc.getString("author"),
-                                                            doc.getString("content"),
-                                                            doc.getTimestamp("time"),
-                                                            Uri.fromFile(localTemp),
-                                                            doc.getString("title")
-                                                    );
-                                                    plazaPostList.add(tempWithImage);
-                                                    Log.i(">>>>>>", "Added Post:"+tempWithImage.toString());
-                                                    Collections.sort(plazaPostList, new Comparator<Post>() {
-                                                        @Override
-                                                        public int compare(Post o1, Post o2) {
-                                                            return (-1) * o1.getTime().compareTo(o2.getTime());
-                                                        }
-                                                    });
-                                                    adapter.notifyDataSetChanged();
-                                                }
-                                            }
-                                        });
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
-                                } else {
-                                    Post temp = new Post(
-                                            doc.getString("author"),
-                                            doc.getString("content"),
-                                            doc.getTimestamp("time"),
-                                            doc.getString("title")
-                                    );
-                                    plazaPostList.add(temp);
-                                    Collections.sort(plazaPostList, new Comparator<Post>() {
+                                try {
+                                    final File localTemp = File.createTempFile(doc.getTimestamp("published").toString(), ".jpg");
+                                    imageRef.getFile(localTemp).addOnCompleteListener(new OnCompleteListener<FileDownloadTask.TaskSnapshot>() {
                                         @Override
-                                        public int compare(Post o1, Post o2) {
-                                            return (-1) * o1.getTime().compareTo(o2.getTime());
+                                        public void onComplete(@NonNull Task<FileDownloadTask.TaskSnapshot> task) {
+                                            if (task.isSuccessful()) {
+                                                Post tempWithImage = new Post(
+                                                        doc.getString("author"),
+                                                        doc.getString("authorId"),
+                                                        doc.getString("content"),
+                                                        doc.getTimestamp("published"),
+                                                        Uri.fromFile(localTemp).toString(),
+                                                        doc.getString("title")
+                                                );
+                                                plazaPostList.add(tempWithImage);
+                                                Collections.sort(plazaPostList, new Comparator<Post>() {
+                                                    @Override
+                                                    public int compare(Post o1, Post o2) {
+                                                        return (-1) * o1.getPublished().compareTo(o2.getPublished());
+                                                    }
+                                                });
+                                                adapter.notifyDataSetChanged();
+                                            }
                                         }
                                     });
-                                    adapter.notifyDataSetChanged();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
                                 }
                             }
                         }

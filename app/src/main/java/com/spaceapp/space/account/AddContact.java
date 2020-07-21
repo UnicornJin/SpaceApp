@@ -52,27 +52,17 @@ public class AddContact extends AppCompatActivity {
                     String myName = my_name.getText().toString();
                     String ContactName = his_name.getText().toString();
 
-                    Map<String, String> dataToMe = new HashMap<>();
-                    dataToMe.put("ContactName", ContactName);
-                    dataToMe.put("Uid", contactUid);
-
-                    Map<String, String> dataToHim = new HashMap<>();
-                    dataToHim.put("ContactName", myName);
-                    dataToHim.put("Uid", MainActivity.currentUser.getUid());
+                    Map<String, String> data = new HashMap<>();
+                    data.put("nameBToA", ContactName);
+                    data.put("personBId", contactUid);
+                    data.put("personAId", MainActivity.currentUser.getUid());
+                    data.put("nameAToB", myName);
+                    data.put("personB", ContactName);
+                    data.put("personA", myName);
 
                     FirebaseFirestore db = FirebaseFirestore.getInstance();
-                    db.collection("USERDATA")
-                            .document(MainActivity.currentUser.getUid())
-                            .collection("CONTACTS")
-                            .document(contactUid)
-                            .set(dataToMe);
-
-                    db.collection("USERDATA")
-                            .document(contactUid)
-                            .collection("CONTACTS")
-                            .document(MainActivity.currentUser.getUid())
-                            .set(dataToHim);
-
+                    db.collection("friends")
+                            .add(data);
                     onBackPressed();
                 }
             }

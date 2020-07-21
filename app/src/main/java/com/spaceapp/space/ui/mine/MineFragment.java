@@ -2,6 +2,7 @@ package com.spaceapp.space.ui.mine;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,6 +12,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,6 +24,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FileDownloadTask;
@@ -40,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -78,26 +82,7 @@ public class MineFragment extends Fragment {
             thisView = root;
 
             userInfo = (TextView) root.findViewById(R.id.userinfo);
-
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            db.collection("USERDATA")
-                    .document(MainActivity.currentUser.getUid())
-                    .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                    if (task.isSuccessful()) {
-                        DocumentSnapshot result = task.getResult();
-                        if (result.exists()) {
-                            String UserInfo = "Welcome to SpaceApp!\n" + result.get("Email").toString();
-                            userInfo.setText(UserInfo);
-                        } else {
-                            Log.e(">>>>>>", "Email get error");
-                        }
-                    } else {
-                        Log.e(">>>>>>", "Cannot get user Email.");
-                    }
-                }
-            });
+            userInfo.setText("Welcome to SpaceApp!\n" + MainActivity.currentUser.getEmail());
 
             //log out button
             ((Button) root.findViewById(R.id.mine_logout)).setOnClickListener(new View.OnClickListener() {
@@ -149,69 +134,50 @@ public class MineFragment extends Fragment {
             recyclerView.setAdapter(adapter);
 
             FirebaseFirestore db = FirebaseFirestore.getInstance();
-            db.collection("USERDATA")
-                    .document(MainActivity.currentUser.getUid())
-                    .collection("POSTS")
+            db.collection("posts")
+                    .whereEqualTo("authorId", MainActivity.currentUser.getUid())
+                    .orderBy("published", Query.Direction.DESCENDING)
                     .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
                         @Override
                         public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
                             if (e != null) {
                                 Log.w(">>>>>", "Load my posts error:" + e);
-                            } else if (!queryDocumentSnapshots.isEmpty()){
-                                for (final QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                                    if (doc.getBoolean("withImage")) {
-                                        FirebaseStorage storage = FirebaseStorage.getInstance();
-                                        StorageReference imageRef = storage.getReference()
-                                                .child("userData")
-                                                .child("PostImageStorage")
-                                                .child(MainActivity.currentUser.getUid())
-                                                .child(doc.getTimestamp("time").toString() + ".jpg");
-                                        Log.i(">>>>>>", "Asking for photo" + imageRef.toString());
+                            }
 
-                                        try {
-                                            final File localTemp = File.createTempFile(doc.getTimestamp("time").toString(), ".jpg");
-                                            imageRef.getFile(localTemp).addOnCompleteListener(new OnCompleteListener<FileDownloadTask.TaskSnapshot>() {
-                                                @Override
-                                                public void onComplete(@NonNull Task<FileDownloadTask.TaskSnapshot> task) {
-                                                    if (task.isSuccessful()) {
-                                                        Post tempWithImage = new Post(
-                                                                doc.getString("author"),
-                                                                doc.getString("content"),
-                                                                doc.getTimestamp("time"),
-                                                                Uri.fromFile(localTemp),
-                                                                doc.getString("title")
-                                                        );
-                                                        myPostList.add(tempWithImage);
-                                                        Log.i(">>>>>>", "Added Post:"+tempWithImage.toString());
-                                                        Collections.sort(myPostList, new Comparator<Post>() {
-                                                            @Override
-                                                            public int compare(Post o1, Post o2) {
-                                                                return (-1) * o1.getTime().compareTo(o2.getTime());
-                                                            }
-                                                        });
-                                                        adapter.notifyDataSetChanged();
-                                                    }
-                                                }
-                                            });
-                                        } catch (Exception exception) {
-                                            exception.printStackTrace();
-                                        }
-                                    } else {
-                                        Post tempWithoutImage = new Post(
-                                                doc.getString("author"),
-                                                doc.getString("content"),
-                                                doc.getTimestamp("time"),
-                                                doc.getString("title")
-                                        );
-                                        myPostList.add(tempWithoutImage);
-                                        Log.i(">>>>>>", "Added Post:"+tempWithoutImage.toString());
-                                        Collections.sort(myPostList, new Comparator<Post>() {
+                            myPostList.clear();
+
+                            if (!(queryDocumentSnapshots == null) && !queryDocumentSnapshots.isEmpty()){
+                                for (final QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                                    try {
+                                        Log.i(">>>>>>>", "doc:" + doc.toString());
+                                        FirebaseStorage storage = FirebaseStorage.getInstance();
+                                        StorageReference imageRef = storage.getReferenceFromUrl(doc.getString("image"));
+                                        final File localTemp = File.createTempFile(doc.getTimestamp("published").toString(), ".jpg");
+                                        imageRef.getFile(localTemp).addOnCompleteListener(new OnCompleteListener<FileDownloadTask.TaskSnapshot>() {
                                             @Override
-                                            public int compare(Post o1, Post o2) {
-                                                return (-1) * o1.getTime().compareTo(o2.getTime());
+                                            public void onComplete(@NonNull Task<FileDownloadTask.TaskSnapshot> task) {
+                                                if (task.isSuccessful()) {
+                                                    Post tempWithImage = new Post(
+                                                            doc.getString("author"),
+                                                            doc.getString("content"),
+                                                            doc.getTimestamp("published"),
+                                                            Uri.fromFile(localTemp).toString(),
+                                                            doc.getString("title")
+                                                    );
+                                                    myPostList.add(tempWithImage);
+                                                    Collections.sort(myPostList, new Comparator<Post>() {
+                                                        @Override
+                                                        public int compare(Post o1, Post o2) {
+                                                            return (-1) * o1.getPublished().compareTo(o2.getPublished());
+                                                        }
+                                                    });
+                                                    adapter.notifyDataSetChanged();
+                                                }
                                             }
                                         });
-                                        adapter.notifyDataSetChanged();
+                                    } catch (Exception exception) {
+                                        exception.printStackTrace();
                                     }
                                 }
                             } else {

@@ -10,9 +10,12 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.spaceapp.space.MainActivity;
 
 import static androidx.core.content.ContextCompat.startActivity;
@@ -22,28 +25,27 @@ import static androidx.core.content.ContextCompat.startActivity;
  */
 public class Post {
     private String author;
-    private String content;
-    private Timestamp time;
-    private Uri imageUri;
+    private String authorId;
     private String title;
-    private boolean withImage;
+    private String content;
+    private Timestamp published;
+    private String image;
 
-    public Post(String author, String content, Timestamp time, Uri imageUri, String title){
+    public Post(String author, String content, Timestamp time, String imageUri, String title){
         this.author = author;
         this.content = content;
-        this.time = time;
-        this.imageUri = imageUri;
+        this.published = time;
+        this.image = imageUri;
         this.title = title;
-        this.withImage = true;
     }
 
-    public Post(String author, String content, Timestamp time, String title){
+    public Post(String author, String authorId, String content, Timestamp time, String imageUri, String title){
         this.author = author;
+        this.authorId = authorId;
         this.content = content;
-        this.time = time;
-        this.imageUri = null;
+        this.published = time;
+        this.image = imageUri;
         this.title = title;
-        this.withImage = false;
     }
 
     public String getAuthor() {
@@ -54,27 +56,32 @@ public class Post {
         return content;
     }
 
-    public Uri getImageUri() {
-        return imageUri;
+    public String getImage() {
+        return image;
     }
 
-    public Timestamp getTime() {
-        return time;
+    public Timestamp getPublished() {
+        return published;
+    }
+
+    public void setAuthorId(String authorId) {
+        this.authorId = authorId;
+    }
+
+    public String getAuthorId() {
+        return this.authorId;
     }
 
     public String getTimeString() {
-        return  time.toDate().toString();
+        return  published.toDate().toString();
     }
 
     public String getTitle() {
         return title;
     }
 
-    public boolean isWithImage() { return withImage; }
-
-    public void setImageUri(Uri uri) {
-        this.withImage = true;
-        this.imageUri = uri;
+    public void setImage(String image) {
+        this.image = image;
     }
 
     /**
@@ -90,7 +97,7 @@ public class Post {
         dialog.setPositiveButton("Yes, Delete.", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                deleteHelper(view);
+                deleteHelper();
             }
         });
         dialog.setNegativeButton("No, don't!", new DialogInterface.OnClickListener() {
@@ -105,30 +112,21 @@ public class Post {
 
     /**
      * send delete order to database.
-     * @param view
      */
-    private void deleteHelper(final View view) {
+    private void deleteHelper() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("USERDATA")
-                .document(MainActivity.currentUser.getUid())
-                .collection("POSTS")
-                .document(this.time.toString())
-                .delete()
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
+        db.collection("posts")
+                .whereEqualTo("authorId", MainActivity.currentUser.getUid())
+                .whereEqualTo("published", this.published)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(view.getContext(), "Post Deleted Successfully!" +
-                                    "Please refresh this page.", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(view.getContext(), "ERROR: Cannot delete this post!", Toast.LENGTH_SHORT).show();
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        for (QueryDocumentSnapshot q : queryDocumentSnapshots) {
+                            q.getReference().delete();
                         }
                     }
                 });
-
-        db.collection("POSTPLAZA")
-                .document(this.time.toString())
-                .delete();
     }
 
     /**
@@ -139,20 +137,17 @@ public class Post {
         Intent intent = new Intent(view.getContext(), ModifyPost.class);
         intent.putExtra("post_title", this.title);
         intent.putExtra("post_content", this.content);
-        if (isWithImage()) {
-            intent.putExtra("post_image", this.imageUri.toString());
-        }
-        intent.putExtra("post_time", this.time.toString());
+        intent.putExtra("post_image", this.image);
+        intent.putExtra("post_time", this.published.toDate().toString());
         startActivity(view.getContext(), intent, null);
     }
 
     @Override
     public String toString() {
-        return  "Time: " + time.toString() +
+        return  "Time: " + published.toString() +
                 "\nAuthor:" + author +
                 "\nTitle:" + title +
                 "\nContent:" + content +
-                "\nis With Image? " + withImage +
-                "\nImageUri:" + ((imageUri == null) ? "" : imageUri.toString());
+                "\nImageUri:" + ((image == null) ? "" : image.toString());
     }
 }

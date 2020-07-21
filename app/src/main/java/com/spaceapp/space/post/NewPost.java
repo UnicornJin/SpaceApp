@@ -4,6 +4,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.media.Image;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -17,6 +19,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -65,15 +68,10 @@ public class NewPost extends AppCompatActivity {
                     sendingPost = new Post(MainActivity.currentUser.getUid(),
                             postContent.getText().toString(),
                             Timestamp.now(),
-                            mSelected.uri,
+                            mSelected.uri.toString(),
                             postTitle.getText().toString());
-                } else {
-                    sendingPost = new Post(MainActivity.currentUser.getUid(),
-                            postContent.getText().toString(),
-                            Timestamp.now(),
-                            postTitle.getText().toString());
+                    sendPost(sendingPost);
                 }
-                sendPost(sendingPost);
             }
         });
 
@@ -113,95 +111,37 @@ public class NewPost extends AppCompatActivity {
      * @param post the new post created
      */
     private void sendPost(final Post post) {
+        final FirebaseStorage storage = FirebaseStorage.getInstance();
+        final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        final Post[] sentingPost = new Post[1];
-
-        //have / do not have image, should be handled differently
-        if (post.isWithImage()) { //If the post is with image, we need to upload the image and store address of image
-            FirebaseStorage storage = FirebaseStorage.getInstance();
-            final StorageReference imageRef = storage.getReference()
-                    .child("userData")
-                    .child("PostImageStorage")
-                    .child(MainActivity.currentUser.getUid())
-                    .child(post.getTime().toString() + ".jpg");
-
-            imageRef.putFile(post.getImageUri()).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-                    if (task.isSuccessful()) {
-                        sentingPost[0] = new Post(
-                                post.getAuthor(),
-                                post.getContent(),
-                                post.getTime(),
-                                null,
-                                post.getTitle()
-                        );
-
-                        Log.i(">>>>>>>", "Senting post:" + sentingPost[0].toString());
-
-                        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-                        db.collection("POSTPLAZA")
-                                .document(post.getTime().toString())
-                                .set(sentingPost[0]);
-
-                        db.collection("USERDATA")
-                                .document(MainActivity.currentUser.getUid())
-                                .collection("POSTS")
-                                .document(post.getTime().toString())
-                                .set(sentingPost[0])
-                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void aVoid) {
-                                        Log.i(">>>>>>>>", "Post Succeed");
-
-                                        onBackPressed();
-                                    }
-                                }).addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Toast.makeText(NewPost.this, "Post Failed", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
-                }
-            });
-        } else { //This part deal with posts without image
-            sentingPost[0] = new Post(
-                    post.getAuthor(),
-                    post.getContent(),
-                    post.getTime(),
-                    post.getTitle()
-            );
-
-            Log.i(">>>>>>>", "Senting post:" + sentingPost[0].toString());
-
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-            db.collection("POSTPLAZA")
-                    .document(post.getTime().toString())
-                    .set(sentingPost[0]);
-
-            db.collection("USERDATA")
-                    .document(MainActivity.currentUser.getUid())
-                    .collection("POSTS")
-                    .document(post.getTime().toString())
-                    .set(sentingPost[0])
-                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            Log.i(">>>>>>>>", "Post Succeed");
-
-                            onBackPressed();
+        storage.getReference()
+                .child("posts/" + post.getAuthorId() + post.getTimeString() + ".jpg")
+                .putFile(Uri.parse(post.getImage()))
+                .addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull final Task<UploadTask.TaskSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            storage.getReference("posts/" + post.getAuthorId() + post.getTimeString() + ".jpg")
+                                    .getDownloadUrl()
+                                    .addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                        @Override
+                                        public void onSuccess(Uri uri) {
+                                            Log.i(">>>>>>>", "imageUrl:" + uri.toString());
+                                            post.setImage(uri.toString());
+                                            post.setAuthorId(MainActivity.currentUser.getUid());
+                                            db.collection("posts")
+                                                    .document()
+                                                    .set(post)
+                                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                        @Override
+                                                        public void onSuccess(Void aVoid) {
+                                                            onBackPressed();
+                                                        }
+                                                    });
+                                        }
+                                    });
                         }
-                    }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Toast.makeText(NewPost.this, "Post Failed", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
+                    }
+                });
     }
-
-
 }

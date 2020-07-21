@@ -1,11 +1,13 @@
 package com.spaceapp.space.ui.chatwindow;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
@@ -26,6 +28,7 @@ import com.spaceapp.space.message.Message;
 import com.spaceapp.space.message.MessageAdapter;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -62,11 +65,10 @@ public class ChatWindow extends AppCompatActivity {
 
         Intent intent = getIntent();
         contact = (Contact) intent.getSerializableExtra("contact");
-        Log.i(">>>>>>>>", "chatting contact: " + contact.getUid());
 
         chatWindowToolbar = (Toolbar) findViewById(R.id.chat_window_toolbar);
         chatWindowToolbar.inflateMenu(R.menu.chat_window_menu);
-        ((TextView) findViewById(R.id.chatting_name)).setText(contact.getName());
+        ((TextView) findViewById(R.id.chatting_name)).setText(contact.getContactName());
 
         //assign the top back button a back function
         chatWindowToolbar.setNavigationOnClickListener(new View.OnClickListener() {
@@ -84,9 +86,6 @@ public class ChatWindow extends AppCompatActivity {
                     case R.id.chatwindow_delete:
                         contact.delete(getWindow().getDecorView());
                         break;
-                    case R.id.chatwindow_block:
-                        contact.block(getWindow().getDecorView());
-                        break;
                     case R.id.chatwindow_rename:
                         contact.rename(getWindow().getDecorView());
                         break;
@@ -99,30 +98,73 @@ public class ChatWindow extends AppCompatActivity {
 
         //Load message list from database.
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("USERDATA")
-                .document(MainActivity.currentUser.getUid())
-                .collection("CONTACTS")
-                .document(contact.getUid())
-                .collection("MSGLIST")
+        db.collection("messages")
+                .whereEqualTo("receiverId", MainActivity.currentUser.getUid())
+                .whereEqualTo("senderId", contact.getUid())
                 .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @RequiresApi(api = Build.VERSION_CODES.N)
                     @Override
                     public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
                         if (e != null) {
                             Log.w(">>>>>", "Listen failed: " + e.toString());
                         }
 
-                        for (DocumentChange dc : queryDocumentSnapshots.getDocumentChanges()) {
-                            switch (dc.getType()) {
-                                case ADDED:
-                                    Message temp = new Message(
-                                            dc.getDocument().getTimestamp("time"),
-                                            dc.getDocument().getString("content"),
-                                            dc.getDocument().getBoolean("sent")
-                                    );
-                                    msgItemList.add(temp);
-                                    adapter.notifyDataSetChanged();
-                                    msgRecyclerView.scrollToPosition(msgItemList.size() - 1);
-                                    break;
+                        if (!queryDocumentSnapshots.isEmpty()){
+                            for (DocumentChange dc : queryDocumentSnapshots.getDocumentChanges()) {
+                                switch (dc.getType()) {
+                                    case ADDED:
+                                        Message temp = new Message(
+                                                dc.getDocument().getTimestamp("time"),
+                                                dc.getDocument().getString("content")
+                                        );
+                                        temp.setType(true);
+                                        msgItemList.add(temp);
+                                        msgItemList.sort(new Comparator<Message>() {
+                                            @Override
+                                            public int compare(Message o1, Message o2) {
+                                                return o1.getTime().compareTo(o2.getTime());
+                                            }
+                                        });
+                                        adapter.notifyDataSetChanged();
+                                        msgRecyclerView.scrollToPosition(msgItemList.size() - 1);
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                });
+
+        db.collection("messages")
+                .whereEqualTo("senderId", MainActivity.currentUser.getUid())
+                .whereEqualTo("receiverId", contact.getUid())
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @RequiresApi(api = Build.VERSION_CODES.N)
+                    @Override
+                    public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                        if (e != null) {
+                            Log.w(">>>>>", "Listen failed: " + e.toString());
+                        }
+
+                        if (!queryDocumentSnapshots.isEmpty()){
+                            for (DocumentChange dc : queryDocumentSnapshots.getDocumentChanges()) {
+                                switch (dc.getType()) {
+                                    case ADDED:
+                                        Message temp = new Message(
+                                                dc.getDocument().getTimestamp("time"),
+                                                dc.getDocument().getString("content")
+                                        );
+                                        temp.setType(false);
+                                        msgItemList.add(temp);
+                                        msgItemList.sort(new Comparator<Message>() {
+                                            @Override
+                                            public int compare(Message o1, Message o2) {
+                                                return o1.getTime().compareTo(o2.getTime());
+                                            }
+                                        });
+                                        adapter.notifyDataSetChanged();
+                                        msgRecyclerView.scrollToPosition(msgItemList.size() - 1);
+                                        break;
+                                }
                             }
                         }
                     }
@@ -152,29 +194,17 @@ public class ChatWindow extends AppCompatActivity {
      */
     private void sendMsg(Message msg, Contact contact) {
 
-        Message msgToMe = new Message(msg.getTime(), msg.getContent(), true);
-        Message msgToHim = new Message(msg.getTime(), msg.getContent(), false);
-
-        Log.i(">>>>>", "Writing to mine :" + contact.getUid());
-
+        Message sendingMsg = new Message(
+                contact.getMyname(),
+                MainActivity.currentUser.getUid(),
+                contact.getContactName(),
+                contact.getUid(),
+                msg.getContent(),
+                msg.getTime()
+                );
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("USERDATA")
-                .document(MainActivity.currentUser.getUid())
-                .collection("CONTACTS")
-                .document(contact.getUid())
-                .collection("MSGLIST")
-                .document(msg.getTime().toString())
-                .set(msgToMe);
-
-        Log.i(">>>>>", "Writing to :" + contact.getUid());
-
-        db.collection("USERDATA")
-                .document(contact.getUid())
-                .collection("CONTACTS")
-                .document(MainActivity.currentUser.getUid())
-                .collection("MSGLIST")
-                .document(msg.getTime().toString())
-                .set(msgToHim);
+        db.collection("messages")
+                .add(sendingMsg);
     }
 
 

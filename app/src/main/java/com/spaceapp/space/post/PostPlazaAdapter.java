@@ -1,6 +1,7 @@
 package com.spaceapp.space.post;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,9 +15,11 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.spaceapp.space.MainActivity;
 import com.spaceapp.space.R;
 import com.spaceapp.space.account.AddContact;
@@ -65,24 +68,12 @@ public class PostPlazaAdapter extends RecyclerView.Adapter<PostPlazaAdapter.View
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
         final Post post = mPostList.get(position);
-
-        if (post.isWithImage()) {
-            holder.postTitle.setText(post.getTitle());
-            holder.postContent.setText(post.getContent());
-            holder.postImage.setVisibility(View.VISIBLE);
-            holder.postImage.setMaxHeight(250);
-            holder.postTime.setText(post.getTimeString());
-
-            Log.i(">>>>>>", "post" + post.toString());
-
-            holder.postImage.setImageURI(post.getImageUri());
-        } else {
-            holder.postTitle.setText(post.getTitle());
-            holder.postContent.setText(post.getContent());
-            holder.postImage.setVisibility(View.GONE);
-            holder.postTime.setText(post.getTimeString());
-        }
-
+        holder.postTitle.setText(post.getTitle());
+        holder.postContent.setText(post.getContent());
+        holder.postImage.setVisibility(View.VISIBLE);
+        holder.postImage.setMaxHeight(250);
+        holder.postTime.setText(post.getTimeString());
+        holder.postImage.setImageURI(Uri.parse(post.getImage()));
         holder.chat.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -97,25 +88,36 @@ public class PostPlazaAdapter extends RecyclerView.Adapter<PostPlazaAdapter.View
     }
 
     private void startChat(final Post post, final View view) {
-        if (post.getAuthor() == MainActivity.currentUser.getUid()) {
+        Log.i(">>>>", "post author ID:" + post.getAuthorId());
+        if (post.getAuthorId().equals(MainActivity.currentUser.getUid())) {
             Toast.makeText(view.getContext(), "Cannot chat with yourself", Toast.LENGTH_SHORT).show();
         } else {
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            db.collection("USERDATA")
-                    .document(MainActivity.currentUser.getUid())
-                    .collection("CONTACTS")
-                    .document(post.getAuthor())
-                    .get()
-                    .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                            if (task.getResult().exists()) {
-                                Toast.makeText(view.getContext(), "You have added this user", Toast.LENGTH_SHORT).show();
-                            } else {
-                                addcontact(post.getAuthor(), view);
+            final FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("friends")
+                    .whereEqualTo("personAId", MainActivity.currentUser.getUid())
+                    .whereEqualTo("personBId", post.getAuthorId())
+                    .get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                @Override
+                public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                    if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
+                        Toast.makeText(view.getContext(), "You have added this user", Toast.LENGTH_SHORT).show();
+                    } else {
+                        db.collection("friends")
+                                .whereEqualTo("personBId", MainActivity.currentUser.getUid())
+                                .whereEqualTo("personAId", post.getAuthorId())
+                                .get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                            @Override
+                            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
+                                    Toast.makeText(view.getContext(), "You have added this user", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    addcontact(post.getAuthorId(), view);
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
+                }
+            });
         }
     }
 
