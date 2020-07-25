@@ -50,7 +50,7 @@
         android:id="@+id/modefy_post"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Modefy"
+        android:text="Modify"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/delete_post"
         app:layout_constraintTop_toBottomOf="@+id/mine_post_time"/>

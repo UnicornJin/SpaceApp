@@ -4,6 +4,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -71,7 +73,20 @@ public class ModifyPost extends AppCompatActivity {
         modContent.setText(intent.getStringExtra("post_content"));
         if (intent.getStringExtra("post_image") != null) {
             imageUri = Uri.parse(intent.getStringExtra("post_image"));
-            imageChosen.setImageURI(imageUri);
+            BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
+            bitmapOptions.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(imageUri.getPath(), bitmapOptions);
+
+            int inSampleSize = 1;
+            while (bitmapOptions.outHeight/inSampleSize > 720 || bitmapOptions.outWidth/inSampleSize > 1080) {
+                inSampleSize *= 2;
+            }
+
+            bitmapOptions.inSampleSize = inSampleSize;
+            bitmapOptions.inJustDecodeBounds = false;
+            Bitmap bitmap = BitmapFactory.decodeFile(imageUri.getPath(), bitmapOptions);
+
+            imageChosen.setImageBitmap(bitmap);
         }
 
         //modPhoto button will start a photo selection activity and replace original photo with chosen one.
@@ -95,7 +110,7 @@ public class ModifyPost extends AppCompatActivity {
                             Timestamp.now(),
                             imageUri.toString(),
                             modTitle.getText().toString());
-                    modifypost(sendingPost, intent.getStringExtra("post_time"));
+                    modifypost(sendingPost, intent.getLongExtra("post_time_second", 0), intent.getIntExtra("post_time_ns", 0));
                 }
             }
         });
@@ -133,18 +148,19 @@ public class ModifyPost extends AppCompatActivity {
     /**
      * This method will update the modified post to database.
      * @param post the post needed to send
-     * @param time time of the original post, need this to change the previous post.
+     * @param second to get time of the original post, need this to change the previous post.
+     * @param ns to get time of the original post, need this to change the previous post.
      */
-    private void modifypost(final Post post, String time) {
+    private void modifypost(final Post post, long second, int ns) {
 
         final FirebaseFirestore db = FirebaseFirestore.getInstance();
         final FirebaseStorage storage = FirebaseStorage.getInstance();
 
-        Log.i(">>>>>>>", "time:" + time);
+        Log.i(">>>>>>>", "time:" + new Timestamp(second, ns));
 
         db.collection("posts")
                 .whereEqualTo("authorId", MainActivity.currentUser.getUid())
-                .whereEqualTo("timeString", time)
+                .whereEqualTo("published", new Timestamp(second, ns))
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override

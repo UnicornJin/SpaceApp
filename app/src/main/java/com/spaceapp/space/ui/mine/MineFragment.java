@@ -172,6 +172,7 @@ public class MineFragment extends Fragment {
                                                             return (-1) * o1.getPublished().compareTo(o2.getPublished());
                                                         }
                                                     });
+                                                    Log.i(">>>>>>", "post added success:" + doc.toString());
                                                     adapter.notifyDataSetChanged();
                                                 }
                                             }

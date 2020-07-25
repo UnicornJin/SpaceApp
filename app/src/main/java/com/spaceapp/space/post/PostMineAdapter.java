@@ -1,6 +1,8 @@
 package com.spaceapp.space.post;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -68,7 +70,21 @@ public class PostMineAdapter extends RecyclerView.Adapter<PostMineAdapter.ViewHo
         holder.postImage.setVisibility(View.VISIBLE);
         holder.postImage.setMaxHeight(250);
         holder.postTime.setText(post.getTimeString());
-        holder.postImage.setImageURI(Uri.parse(post.getImage()));
+
+        BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
+        bitmapOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(Uri.parse(post.getImage()).getPath(), bitmapOptions);
+
+        int inSampleSize = 1;
+        while (bitmapOptions.outHeight/inSampleSize > 720 || bitmapOptions.outWidth/inSampleSize > 1080) {
+            inSampleSize *= 2;
+        }
+
+        bitmapOptions.inSampleSize = inSampleSize;
+        bitmapOptions.inJustDecodeBounds = false;
+        Bitmap bitmap = BitmapFactory.decodeFile(Uri.parse(post.getImage()).getPath(), bitmapOptions);
+
+        holder.postImage.setImageBitmap(bitmap);
 
         holder.delete.setOnClickListener(new View.OnClickListener() {
             @Override

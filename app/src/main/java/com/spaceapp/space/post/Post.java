@@ -138,7 +138,8 @@ public class Post {
         intent.putExtra("post_title", this.title);
         intent.putExtra("post_content", this.content);
         intent.putExtra("post_image", this.image);
-        intent.putExtra("post_time", this.published.toDate().toString());
+        intent.putExtra("post_time_second", this.published.getSeconds());
+        intent.putExtra("post_time_ns", this.published.getNanoseconds());
         startActivity(view.getContext(), intent, null);
     }
 
